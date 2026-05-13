@@ -20,7 +20,7 @@ const AdminLoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/admin/login', { email, password });
+      const res = await axios.post('/api/admin/login', { email, password });
       localStorage.setItem('adminToken', res.data.token);
       localStorage.setItem('adminRole', 'admin');
       navigate('/admin/dashboard');

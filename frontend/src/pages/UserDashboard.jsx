@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/app_logo.png';
 
-const API_URL = 'http://localhost:5000/api/beneficiaries';
+const API_URL = '/api/beneficiaries';
 
 // Theme Colors from Logo
 const COLORS = {
@@ -36,7 +36,7 @@ function UserDashboard() {
   const fetchGroupStatuses = async () => {
     const token = localStorage.getItem('userToken');
     try {
-      const res = await axios.get('http://localhost:5000/api/group-status', {
+      const res = await axios.get('/api/group-status', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGroupStatuses(res.data);
@@ -48,7 +48,7 @@ function UserDashboard() {
   const fetchConfig = async () => {
     const token = localStorage.getItem('userToken');
     try {
-      const res = await axios.get('http://localhost:5000/api/config/registrationNumber', {
+      const res = await axios.get('/api/config/registrationNumber', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGlobalRegNo(res.data.value);

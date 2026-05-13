@@ -49,7 +49,7 @@ const AdminDashboard = () => {
   const fetchGroupStatuses = async () => {
     const token = localStorage.getItem('adminToken');
     try {
-      const res = await axios.get('http://localhost:5000/api/group-status', {
+      const res = await axios.get('/api/group-status', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGroupStatuses(res.data);
@@ -61,7 +61,7 @@ const AdminDashboard = () => {
   const handleUpdateGroupStatus = async (groupId, isTerminated, isHidden, reason) => {
     const token = localStorage.getItem('adminToken');
     try {
-      await axios.post('http://localhost:5000/api/group-status', { groupId, isTerminated, isHidden, reason }, {
+      await axios.post('/api/group-status', { groupId, isTerminated, isHidden, reason }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchGroupStatuses();
@@ -73,7 +73,7 @@ const AdminDashboard = () => {
   const fetchConfig = async () => {
     const token = localStorage.getItem('adminToken');
     try {
-      const res = await axios.get('http://localhost:5000/api/config/registrationNumber', {
+      const res = await axios.get('/api/config/registrationNumber', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGlobalRegNo(res.data.value);
@@ -86,7 +86,7 @@ const AdminDashboard = () => {
     const token = localStorage.getItem('adminToken');
     setIsSavingConfig(true);
     try {
-      await axios.post('http://localhost:5000/api/config', { key: 'registrationNumber', value: globalRegNo }, {
+      await axios.post('/api/config', { key: 'registrationNumber', value: globalRegNo }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Registration Number updated successfully');
@@ -103,10 +103,10 @@ const AdminDashboard = () => {
     if (!token || role !== 'admin') return navigate('/admin/login');
 
     try {
-      const statsRes = await axios.get('http://localhost:5000/api/admin/stats', {
+      const statsRes = await axios.get('/api/admin/stats', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const beneRes = await axios.get('http://localhost:5000/api/beneficiaries', {
+      const beneRes = await axios.get('/api/beneficiaries', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStats(statsRes.data);
@@ -122,7 +122,7 @@ const AdminDashboard = () => {
     if (!window.confirm('Are you sure you want to delete this beneficiary?')) return;
     const token = localStorage.getItem('adminToken');
     try {
-      await axios.delete(`http://localhost:5000/api/beneficiaries/${id}`, {
+      await axios.delete(`/api/beneficiaries/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchData();
@@ -149,12 +149,12 @@ const AdminDashboard = () => {
     const token = localStorage.getItem('adminToken');
     try {
       if (editId) {
-        await axios.put(`http://localhost:5000/api/beneficiaries/${editId}`, formData, {
+        await axios.put(`/api/beneficiaries/${editId}`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         alert('Beneficiary updated successfully');
       } else {
-        await axios.post('http://localhost:5000/api/beneficiaries', formData, {
+        await axios.post('/api/beneficiaries', formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         alert('Beneficiary added successfully');
