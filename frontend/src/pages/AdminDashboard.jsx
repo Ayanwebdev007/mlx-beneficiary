@@ -52,7 +52,7 @@ const AdminDashboard = () => {
       const res = await axios.get('/api/group-status', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setGroupStatuses(res.data);
+      setGroupStatuses(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error('Group status fetch error:', err);
     }
@@ -110,7 +110,7 @@ const AdminDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStats(statsRes.data);
-      setBeneficiaries(beneRes.data);
+      setBeneficiaries(Array.isArray(beneRes.data) ? beneRes.data : []);
       setLoading(false);
     } catch (err) {
       console.error('Admin fetch error:', err);
@@ -263,7 +263,7 @@ const AdminDashboard = () => {
                     <Users size={32} />
                   </div>
                   <p className="text-slate-400 text-xs font-normal uppercase tracking-[0.2em] mb-2">Authorized Registry</p>
-                  <h3 className="text-6xl font-normal text-slate-900 tracking-tighter">{beneficiaries.length}</h3>
+                  <h3 className="text-6xl font-normal text-slate-900 tracking-tighter">{(beneficiaries || []).length}</h3>
                   <p className="text-sm font-normal text-slate-400 mt-2">Active records verified</p>
                 </div>
                 <button 
@@ -288,7 +288,7 @@ const AdminDashboard = () => {
                   </div>
                   <p className="text-slate-400 text-xs font-normal uppercase tracking-[0.2em] mb-2">Operational Groups</p>
                   <h3 className="text-6xl font-normal text-slate-900 tracking-tighter">
-                    0{9 - groupStatuses.filter(s => s.isTerminated).length}
+                    0{9 - (Array.isArray(groupStatuses) ? groupStatuses : []).filter(s => s.isTerminated).length}
                   </h3>
                   <p className="text-sm font-normal text-slate-400 mt-2">Active security units</p>
                 </div>
@@ -399,7 +399,7 @@ const AdminDashboard = () => {
 
                 <div className="space-y-4">
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((id) => {
-                    const status = groupStatuses.find(s => s.groupId === id) || { isTerminated: false, isHidden: false, reason: '' };
+                    const status = (groupStatuses || []).find(s => s.groupId === id) || { isTerminated: false, isHidden: false, reason: '' };
                     return (
                       <div key={id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-6 rounded-3xl border border-slate-200 bg-white hover:bg-slate-50 transition-all group shadow-sm">
                         <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center font-normal text-slate-900 border border-slate-200 shadow-sm shrink-0">
@@ -460,7 +460,7 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {beneficiaries.length === 0 ? (
+                    {(Array.isArray(beneficiaries) ? beneficiaries : []).length === 0 ? (
                       <tr>
                         <td colSpan="5" className="p-24 text-center flex flex-col items-center gap-4">
                           <AlertCircle size={48} className="text-slate-100" />
@@ -468,7 +468,7 @@ const AdminDashboard = () => {
                         </td>
                       </tr>
                     ) : (
-                      beneficiaries.map((b) => (
+                      (Array.isArray(beneficiaries) ? beneficiaries : []).map((b) => (
                         <tr key={b._id} className="hover:bg-slate-50/50 transition-colors">
                           <td className="px-8 py-6">
                             <span className="font-normal text-slate-900 block">{b.name}</span>

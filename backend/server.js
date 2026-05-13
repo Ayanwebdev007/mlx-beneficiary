@@ -14,9 +14,29 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection
+// MongoDB Connection & Migration
 mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB (mlx_beneficiaries_db)'))
+    .then(async () => {
+        console.log('Connected to MongoDB (mlx_beneficiaries_db)');
+        
+        // --- PROFESSIONAL DATABASE MIGRATION ---
+        try {
+            const collections = await mongoose.connection.db.listCollections({ name: 'beneficiaries' }).toArray();
+            if (collections.length > 0) {
+                const indexes = await mongoose.connection.collection('beneficiaries').indexes();
+                const hasEmailIndex = indexes.some(idx => idx.name === 'email_1');
+                
+                if (hasEmailIndex) {
+                    console.log('Detected stale unique index "email_1". Dropping for compatibility...');
+                    await mongoose.connection.collection('beneficiaries').dropIndex('email_1');
+                    console.log('Migration successful: Stale index removed.');
+                }
+            }
+        } catch (err) {
+            console.log('Migration info: No stale index found or already removed.');
+        }
+        // ----------------------------------------
+    })
     .catch(err => console.error('MongoDB connection error:', err));
 
 // Models
