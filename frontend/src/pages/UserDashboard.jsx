@@ -103,31 +103,32 @@ function UserDashboard() {
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Navigation Bar */}
       <nav className="bg-[#003B8E] border-b border-white/10 sticky top-0 z-40">
-        <div className="max-w-[1400px] mx-auto px-6 h-24 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-6">
-              <img src={logo} alt="BOA PAY" className="h-14 w-auto" />
-              <div className="h-10 w-px bg-white/20" />
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 h-20 sm:h-24 flex items-center justify-between">
+          <div className="flex items-center gap-4 sm:gap-8">
+            <div className="flex items-center gap-3 sm:gap-6">
+              <img src={logo} alt="BOA PAY" className="h-10 sm:h-14 w-auto" />
+              <div className="h-8 sm:h-10 w-px bg-white/20" />
               <div className="flex flex-col">
-                <span className="text-xl font-normal text-white tracking-tight leading-tight uppercase">BOA APPLICANT NAMES</span>
-                <div className="flex items-center gap-3 mt-1.5">
-                  <span className="text-[10px] font-light text-white uppercase tracking-[0.2em] leading-none">Registration ID:</span>
-                  <span className="text-sm font-normal text-white uppercase tracking-widest leading-none">{globalRegNo || 'NOT-SET'}</span>
+                <span className="hidden sm:block text-xl font-normal text-white tracking-tight leading-tight uppercase">BOA APPLICANT NAMES</span>
+                <span className="block sm:hidden text-base font-normal text-white tracking-tight leading-tight uppercase">APPLICANTS</span>
+                <div className="flex items-center gap-2 sm:gap-3 mt-1 sm:mt-1.5">
+                  <span className="hidden xs:block text-[8px] sm:text-[10px] font-light text-white uppercase tracking-[0.2em] leading-none">Registration ID:</span>
+                  <span className="text-xs sm:text-sm font-normal text-white uppercase tracking-widest leading-none">{globalRegNo || 'NOT-SET'}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="hidden sm:flex flex-col items-end mr-2 text-right">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="hidden lg:flex flex-col items-end mr-2 text-right">
               <span className="text-xs font-light text-white/50 uppercase tracking-widest">Authorized Access</span>
               <span className="text-sm font-normal text-white">Applicant Portal</span>
             </div>
             <button 
               onClick={handleLogout}
-              className="flex items-center gap-2 bg-white text-[#003B8E] px-6 py-3 rounded-xl font-normal text-xs uppercase tracking-widest hover:bg-[#C8232C] hover:text-white transition-all shadow-xl shadow-black/10 active:scale-95"
+              className="flex items-center gap-2 bg-white text-[#003B8E] px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-normal text-[10px] sm:text-xs uppercase tracking-widest hover:bg-[#C8232C] hover:text-white transition-all shadow-xl shadow-black/10 active:scale-95"
             >
-              <LogOut size={16} />
+              <LogOut size={14} className="sm:w-4 sm:h-4" />
               Logout
             </button>
           </div>
@@ -151,7 +152,7 @@ function UserDashboard() {
                     key={group.id}
                     whileHover={!status.isTerminated ? { y: -6, shadow: "0 25px 50px -12px rgb(0 0 0 / 0.15)" } : {}}
                     onClick={() => !status.isTerminated && setSelectedGroup(group.id)}
-                    className={`p-10 rounded-[2.5rem] border-2 transition-all group flex flex-col justify-between min-h-[280px] relative overflow-hidden ${
+                    className={`p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border-2 transition-all group flex flex-col justify-between min-h-[240px] sm:min-h-[280px] relative overflow-hidden ${
                       status.isTerminated 
                       ? 'bg-red-50/50 border-[#C8232C] cursor-not-allowed opacity-90' 
                       : 'bg-white border-slate-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-[#003B8E] cursor-pointer'
@@ -236,7 +237,7 @@ function UserDashboard() {
             className="bg-white rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/20 overflow-hidden"
           >
             {/* Table Header */}
-            <div className="p-10 border-b border-slate-100 bg-white relative overflow-hidden">
+            <div className="p-6 sm:p-10 border-b border-slate-100 bg-white relative overflow-hidden">
               {/* Background Accent */}
               <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-blue-50/50 to-transparent pointer-events-none" />
               
@@ -249,19 +250,22 @@ function UserDashboard() {
                     <ChevronRight size={24} className="rotate-180" />
                   </button>
                   <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <h2 className="text-3xl font-normal text-slate-900 tracking-tight">Beneficiary Group {selectedGroup}</h2>
-                      <div className="flex items-center gap-1.5 bg-[#003B8E]/5 text-[#003B8E] px-3 py-1 rounded-full border border-blue-100">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-1">
+                      <h2 className="text-xl sm:text-3xl font-normal text-slate-900 tracking-tight">Beneficiary Group {selectedGroup}</h2>
+                      <div className="flex items-center gap-1.5 bg-[#003B8E]/5 text-[#003B8E] px-3 py-1 rounded-full border border-blue-100 w-fit">
                         <ShieldCheck size={12} />
                         <span className="text-[10px] font-normal uppercase tracking-widest">Verified Records</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 text-slate-400">
-                      <p className="text-xs font-normal uppercase tracking-[0.2em]">{filteredBeneficiaries.length} Enrolled Members</p>
+                      <p className="text-[10px] sm:text-xs font-normal uppercase tracking-[0.1em] sm:tracking-[0.2em]">
+                        {filteredBeneficiaries.length} <span className="hidden sm:inline">Enrolled Members</span><span className="inline sm:hidden">Members</span>
+                      </p>
                       <div className="w-1 h-1 bg-slate-200 rounded-full" />
                       <div className="flex items-center gap-1.5 text-[10px] font-normal uppercase tracking-widest text-emerald-600">
                         <Clock size={10} />
-                        Live Synchronized
+                        <span className="hidden sm:inline">Live Synchronized</span>
+                        <span className="inline sm:hidden">Live</span>
                       </div>
                     </div>
                   </div>
@@ -285,11 +289,20 @@ function UserDashboard() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-blue-50 border-b border-blue-100">
-                    <th className="px-8 py-5 text-[#003B8E] font-normal text-[11px] uppercase tracking-[0.2em]">BOA APPLICANT NAMES</th>
-                    <th className="px-8 py-5 text-[#003B8E] font-normal text-[11px] uppercase tracking-[0.2em] text-center">State</th>
-                    <th className="px-8 py-5 text-[#003B8E] font-normal text-[11px] uppercase tracking-[0.2em] text-center">Gender</th>
-                    <th className="px-8 py-5 text-[#003B8E] font-normal text-[11px] uppercase tracking-[0.2em] text-center">Status</th>
-                    <th className="px-8 py-5 text-[#003B8E] font-normal text-[11px] uppercase tracking-[0.2em] text-center">Remarks</th>
+                    <th className="px-4 sm:px-8 py-4 sm:py-5 text-[#003B8E] font-normal text-[9px] sm:text-[11px] uppercase tracking-[0.2em]">
+                      <span className="hidden sm:inline">BOA APPLICANT NAMES</span>
+                      <span className="inline sm:hidden">NAME</span>
+                    </th>
+                    <th className="px-4 sm:px-8 py-4 sm:py-5 text-[#003B8E] font-normal text-[9px] sm:text-[11px] uppercase tracking-[0.2em] text-center">State</th>
+                    <th className="px-4 sm:px-8 py-4 sm:py-5 text-[#003B8E] font-normal text-[9px] sm:text-[11px] uppercase tracking-[0.2em] text-center">
+                      <span className="hidden sm:inline">Gender</span>
+                      <span className="inline sm:hidden">G</span>
+                    </th>
+                    <th className="px-4 sm:px-8 py-4 sm:py-5 text-[#003B8E] font-normal text-[9px] sm:text-[11px] uppercase tracking-[0.2em] text-center">Status</th>
+                    <th className="px-4 sm:px-8 py-4 sm:py-5 text-[#003B8E] font-normal text-[9px] sm:text-[11px] uppercase tracking-[0.2em] text-center">
+                      <span className="hidden sm:inline">Remarks</span>
+                      <span className="inline sm:hidden">Note</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -305,25 +318,25 @@ function UserDashboard() {
                   ) : (
                     filteredBeneficiaries.map((b) => (
                       <tr key={b._id} className="hover:bg-[#003B8E]/[0.02] transition-colors group">
-                        <td className="px-8 py-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-100">
-                              <CheckCircle2 size={16} />
+                        <td className="px-4 sm:px-8 py-4 sm:py-6">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-100 shrink-0">
+                              <CheckCircle2 size={12} className="sm:w-4 sm:h-4" />
                             </div>
-                            <span className="font-normal text-slate-900 block tracking-tight">{b.name}</span>
+                            <span className="font-normal text-slate-900 block tracking-tight text-xs sm:text-base">{b.name}</span>
                           </div>
                         </td>
-                        <td className="px-8 py-6 text-center">
-                          <div className="text-slate-600 font-normal">
+                        <td className="px-4 sm:px-8 py-4 sm:py-6 text-center">
+                          <div className="text-slate-600 font-normal text-[10px] sm:text-sm">
                             {b.address}
                           </div>
                         </td>
-                        <td className="px-8 py-6 text-center">
-                          <span className="px-3 py-1 rounded-lg text-[10px] font-normal uppercase bg-slate-100 text-slate-600">
+                        <td className="px-4 sm:px-8 py-4 sm:py-6 text-center">
+                          <span className="px-2 sm:px-3 py-1 rounded-lg text-[8px] sm:text-[10px] font-normal uppercase bg-slate-100 text-slate-600 whitespace-nowrap">
                             {b.gender}
                           </span>
                         </td>
-                        <td className="px-8 py-6 text-center">
+                        <td className="px-4 sm:px-8 py-4 sm:py-6 text-center">
                           <motion.div 
                             animate={b.isActive ? { 
                               scale: [1, 1.1, 1],
@@ -334,13 +347,13 @@ function UserDashboard() {
                               repeat: Infinity,
                               ease: "easeInOut"
                             } : {}}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg w-fit mx-auto ${b.isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-[#C8232C] border border-red-100'}`}
+                            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg w-fit mx-auto ${b.isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-[#C8232C] border border-red-100'}`}
                           >
-                            {b.isActive ? <CheckSquare size={14} strokeWidth={2.5} /> : <Square size={14} strokeWidth={2.5} />}
-                            <span className="text-[10px] font-normal uppercase tracking-widest">{b.isActive ? 'Active' : 'Inactive'}</span>
+                            {b.isActive ? <CheckSquare size={12} strokeWidth={2.5} className="sm:w-[14px] sm:h-[14px]" /> : <Square size={12} strokeWidth={2.5} className="sm:w-[14px] sm:h-[14px]" />}
+                            <span className="text-[8px] sm:text-[10px] font-normal uppercase tracking-widest">{b.isActive ? 'Active' : 'Inactive'}</span>
                           </motion.div>
                         </td>
-                        <td className="px-8 py-6 text-center">
+                        <td className="px-4 sm:px-8 py-4 sm:py-6 text-center">
                           {b.comment ? (
                             <button 
                               onClick={() => setSelectedNote({ name: b.name, note: b.comment })}
@@ -378,7 +391,7 @@ function UserDashboard() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white w-full max-w-lg p-10 rounded-[2.5rem] relative z-10 shadow-2xl border border-slate-100"
+              className="bg-white w-full max-w-lg p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] relative z-10 shadow-2xl border border-slate-100"
             >
               <div className="flex justify-between items-start mb-8">
                 <div className="w-14 h-14 bg-[#003B8E]/5 text-[#003B8E] rounded-2xl flex items-center justify-center mb-4">
