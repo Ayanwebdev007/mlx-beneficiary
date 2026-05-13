@@ -67,12 +67,9 @@ const LoginPage = () => {
           </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-slate-100 space-y-3 text-center">
-          <p className="text-sm text-slate-500">
-            Don't have an account? <Link to="/register" className="text-indigo-600 font-medium hover:underline">Register</Link>
-          </p>
-          <Link to="/admin/login" className="block text-xs text-slate-400 hover:text-slate-600 transition-colors">
-            Admin Login
+        <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+          <Link to="/admin/login" className="text-xs font-normal uppercase tracking-widest text-slate-400 hover:text-[#003B8E] transition-colors">
+            Secure Admin Access
           </Link>
         </div>
       </div>
