@@ -112,7 +112,7 @@ function UserDashboard() {
                 <span className="hidden sm:block text-xl font-normal text-white tracking-tight leading-tight uppercase">BOA APPLICANT NAMES</span>
                 <span className="block sm:hidden text-base font-normal text-white tracking-tight leading-tight uppercase">APPLICANTS</span>
                 <div className="flex items-center gap-2 sm:gap-3 mt-1 sm:mt-1.5">
-                  <span className="hidden xs:block text-[8px] sm:text-[10px] font-light text-white uppercase tracking-[0.2em] leading-none">Registration ID:</span>
+                  <span className="hidden sm:block text-[10px] font-light text-white uppercase tracking-[0.2em] leading-none">Registration ID:</span>
                   <span className="text-xs sm:text-sm font-normal text-white uppercase tracking-widest leading-none">{globalRegNo || 'NOT-SET'}</span>
                 </div>
               </div>
