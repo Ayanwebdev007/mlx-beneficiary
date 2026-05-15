@@ -69,7 +69,8 @@ const Beneficiary = mongoose.model('Beneficiary', BeneficiarySchema);
 const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, default: 'user' }
+    role: { type: String, default: 'user' },
+    groupId: { type: Number, default: null } // null for Universal access
 });
 const User = mongoose.model('User', UserSchema);
 
@@ -139,11 +140,24 @@ app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     try {
         const user = await User.findOne({ email });
-        if (!user || !(await bcrypt.compare(password, user.password))) {
+        if (!user) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
-        const token = jwt.sign({ id: user._id, role: 'user' }, process.env.JWT_SECRET);
-        res.json({ token, role: 'user' });
+        
+        // For Admin (hashed) vs Group Users (plain text as requested)
+        let isMatch = false;
+        if (user.role === 'admin') {
+            isMatch = await bcrypt.compare(password, user.password);
+        } else {
+            isMatch = (password === user.password);
+        }
+
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid credentials' });
+        }
+
+        const token = jwt.sign({ id: user._id, role: user.role, groupId: user.groupId }, process.env.JWT_SECRET);
+        res.json({ token, role: user.role, groupId: user.groupId });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -166,7 +180,8 @@ app.post('/api/admin/login', async (req, res) => {
 // Beneficiary Routes (Protected)
 app.get('/api/beneficiaries', auth(), async (req, res) => {
     try {
-        const beneficiaries = await Beneficiary.find();
+        const query = req.user.groupId ? { groupId: req.user.groupId } : {};
+        const beneficiaries = await Beneficiary.find(query);
         res.json(beneficiaries);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -245,7 +260,27 @@ app.post('/api/config', auth('admin'), async (req, res) => {
 app.get('/api/group-status', auth(), async (req, res) => {
     try {
         const statuses = await GroupStatus.find();
-        res.json(statuses);
+        
+        // Get counts for all groups to show on the grid
+        const counts = await Beneficiary.aggregate([
+            { $group: { _id: "$groupId", count: { $sum: 1 } } }
+        ]);
+
+        // Merge counts into statuses
+        const result = statuses.map(s => {
+            const countObj = counts.find(c => c._id === s.groupId);
+            return { ...s._doc, userCount: countObj ? countObj.count : 0 };
+        });
+
+        // Add groups that might not have a status entry yet
+        for (let i = 1; i <= 9; i++) {
+            if (!result.find(r => r.groupId === i)) {
+                const countObj = counts.find(c => c._id === i);
+                result.push({ groupId: i, isTerminated: false, isHidden: false, reason: '', userCount: countObj ? countObj.count : 0 });
+            }
+        }
+
+        res.json(result);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -261,6 +296,40 @@ app.post('/api/group-status', auth('admin'), async (req, res) => {
         );
         res.json(status);
     } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
+
+// User Credential Management (Admin Only)
+app.get('/api/admin/users', auth('admin'), async (req, res) => {
+    try {
+        const users = await User.find({ role: 'user' }); // Include password for visibility
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+app.post('/api/admin/users', auth('admin'), async (req, res) => {
+    const { email, password, groupId } = req.body;
+    try {
+        // Check if the email is already taken by another user (different groupId)
+        const existingUser = await User.findOne({ email });
+        if (existingUser && existingUser.groupId !== groupId) {
+            return res.status(400).json({ message: 'This email is already in use by another group or the admin.' });
+        }
+
+        // Storing as plain text as requested by user to allow visibility
+        const user = await User.findOneAndUpdate(
+            { groupId }, 
+            { email, password, role: 'user' }, 
+            { upsert: true, new: true }
+        );
+        res.json({ message: `Credentials updated for ${groupId ? 'Group ' + groupId : 'Universal Access'}`, user: { email: user.email, groupId: user.groupId } });
+    } catch (err) {
+        if (err.code === 11000) {
+            return res.status(400).json({ message: 'Conflict: This email is already assigned to another access level.' });
+        }
         res.status(400).json({ message: err.message });
     }
 });

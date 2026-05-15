@@ -23,6 +23,7 @@ const LoginPage = () => {
       const res = await axios.post('/api/auth/login', { email, password });
       localStorage.setItem('userToken', res.data.token);
       localStorage.setItem('userRole', 'user');
+      localStorage.setItem('userGroupId', res.data.groupId);
       navigate('/user/dashboard');
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed');

@@ -41,11 +41,54 @@ const AdminDashboard = () => {
   const [showTermModal, setShowTermModal] = useState(false);
   const [termData, setTermData] = useState({ id: null, reason: '', isTerminated: false, isHidden: false });
 
+  // Credential Management State
+  const [credentialUsers, setCredentialUsers] = useState([]);
+  const [showCredModal, setShowCredModal] = useState(false);
+  const [selectedCredGroup, setSelectedCredGroup] = useState(null); // null for Universal
+  const [credFormData, setCredFormData] = useState({ email: '', password: '' });
+  const [isSavingCred, setIsSavingCred] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
   useEffect(() => {
     fetchData();
     fetchConfig();
     fetchGroupStatuses();
+    fetchCredentials();
   }, []);
+
+  const fetchCredentials = async () => {
+    const token = localStorage.getItem('adminToken');
+    try {
+      const res = await axios.get('/api/admin/users', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCredentialUsers(res.data);
+    } catch (err) {
+      console.error('Credentials fetch error:', err);
+    }
+  };
+
+  const handleUpdateCredentials = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('adminToken');
+    setIsSavingCred(true);
+    try {
+      await axios.post('/api/admin/users', { 
+        email: credFormData.email, 
+        password: credFormData.password, 
+        groupId: selectedCredGroup 
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Credentials updated successfully');
+      setShowCredModal(false);
+      fetchCredentials();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error updating credentials');
+    } finally {
+      setIsSavingCred(false);
+    }
+  };
 
   const fetchGroupStatuses = async () => {
     const token = localStorage.getItem('adminToken');
@@ -399,42 +442,92 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((id) => {
-                    const status = (groupStatuses || []).find(s => s.groupId === id) || { isTerminated: false, isHidden: false, reason: '' };
-                    return (
-                      <div key={id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-6 rounded-3xl border border-slate-200 bg-white hover:bg-slate-50 transition-all group shadow-sm">
-                        <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center font-normal text-slate-900 border border-slate-200 shadow-sm shrink-0">
-                          {id}
+                <div className="space-y-6">
+                  {/* Universal Credential Section */}
+                  <div className="p-8 rounded-[2rem] bg-[#003B8E]/5 border border-[#003B8E]/10 relative overflow-hidden group">
+                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#003B8E]/5 rounded-full blur-2xl group-hover:bg-[#003B8E]/10 transition-all" />
+                    <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-[#003B8E] text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-900/20">
+                          <CheckSquare size={24} />
                         </div>
-                        <div className="flex-1 w-full">
-                          <p className={`text-xs font-normal ${status.isTerminated ? 'text-[#C8232C]' : 'text-slate-400'}`}>
-                            {status.isTerminated ? `Reason: ${status.reason || 'Not specified'}` : 'Group Operational & Active'}
+                        <div>
+                          <h4 className="text-lg font-normal text-slate-900">Universal Access Login</h4>
+                          <p className="text-xs font-normal text-slate-400">Can view and manage all 9 groups</p>
+                          <p className="text-[10px] font-medium text-[#003B8E] mt-1 bg-white px-2 py-0.5 rounded-full border border-blue-100 w-fit">
+                            {credentialUsers.find(u => u.groupId === null)?.email || 'Not configured'}
                           </p>
                         </div>
-                        <div className="flex gap-2 shrink-0">
-                          <button 
-                            onClick={() => handleUpdateGroupStatus(id, status.isTerminated, !status.isHidden, status.reason)}
-                            className={`p-2.5 rounded-xl transition-all border ${status.isHidden ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-200 hover:text-slate-900'}`}
-                            title={status.isHidden ? 'Unhide Group' : 'Hide Group'}
-                          >
-                            {status.isHidden ? <EyeOff size={18} /> : <Eye size={18} />}
-                          </button>
-                          <button 
-                            onClick={() => {
-                              if (status.isTerminated) {
-                                // Direct determinate
-                                handleUpdateGroupStatus(id, false, status.isHidden, '');
-                              } else {
-                                // Open modal to terminate
-                                setTermData({ id, isTerminated: true, isHidden: status.isHidden, reason: '' });
-                                setShowTermModal(true);
-                              }
-                            }}
-                            className={`px-6 py-2.5 rounded-xl font-normal text-[10px] uppercase tracking-widest transition-all ${status.isTerminated ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700' : 'bg-white text-slate-500 border-2 border-slate-200 hover:text-red-600 hover:border-red-600 hover:shadow-lg hover:shadow-red-500/10'}`}
-                          >
-                            {status.isTerminated ? 'Reactivate' : 'Terminate'}
-                          </button>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          const existing = credentialUsers.find(u => u.groupId === null);
+                          setCredFormData({ email: existing?.email || '', password: existing?.password || '' });
+                          setSelectedCredGroup(null);
+                          setShowCredModal(true);
+                        }}
+                        className="px-8 py-3 bg-white text-[#003B8E] border border-blue-100 rounded-xl font-normal text-[10px] uppercase tracking-widest hover:bg-[#003B8E] hover:text-white transition-all shadow-sm"
+                      >
+                        Set Universal Creds
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-slate-100 w-full" />
+                  <p className="text-[10px] font-normal text-slate-400 uppercase tracking-[0.2em] ml-1">Individual Group Logins</p>
+
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((id) => {
+                    const status = (groupStatuses || []).find(s => s.groupId === id) || { isTerminated: false, isHidden: false, reason: '' };
+                    const user = credentialUsers.find(u => u.groupId === id);
+                    return (
+                      <div key={id} className="flex flex-col p-6 rounded-3xl border border-slate-200 bg-white hover:border-[#003B8E]/30 transition-all group shadow-sm">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                          <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center font-normal text-slate-900 border border-slate-200 shadow-sm shrink-0">
+                            {id}
+                          </div>
+                          <div className="flex-1 w-full">
+                            <p className={`text-xs font-normal ${status.isTerminated ? 'text-[#C8232C]' : 'text-slate-400'}`}>
+                              {status.isTerminated ? `Reason: ${status.reason || 'Not specified'}` : 'Group Operational & Active'}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[9px] font-medium text-slate-400 uppercase tracking-widest">Login:</span>
+                              <span className="text-[10px] font-normal text-slate-600">{user?.email || 'No specific login set'}</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                            <button 
+                              onClick={() => {
+                                const existing = credentialUsers.find(u => u.groupId === id);
+                                setCredFormData({ email: existing?.email || '', password: existing?.password || '' });
+                                setSelectedCredGroup(id);
+                                setShowCredModal(true);
+                              }}
+                              className="p-2.5 rounded-xl transition-all border bg-blue-50 text-[#003B8E] border-blue-100 hover:bg-[#003B8E] hover:text-white"
+                              title="Set Group Login"
+                            >
+                              <Shield size={18} />
+                            </button>
+                            <button 
+                              onClick={() => handleUpdateGroupStatus(id, status.isTerminated, !status.isHidden, status.reason)}
+                              className={`p-2.5 rounded-xl transition-all border ${status.isHidden ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-200 hover:text-slate-900'}`}
+                              title={status.isHidden ? 'Unhide Group' : 'Hide Group'}
+                            >
+                              {status.isHidden ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                            <button 
+                              onClick={() => {
+                                if (status.isTerminated) {
+                                  handleUpdateGroupStatus(id, false, status.isHidden, '');
+                                } else {
+                                  setTermData({ id, isTerminated: true, isHidden: status.isHidden, reason: '' });
+                                  setShowTermModal(true);
+                                }
+                              }}
+                              className={`px-6 py-2.5 rounded-xl font-normal text-[10px] uppercase tracking-widest transition-all ${status.isTerminated ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700' : 'bg-white text-slate-500 border-2 border-slate-200 hover:text-red-600 hover:border-red-600'}`}
+                            >
+                              {status.isTerminated ? 'Reactivate' : 'Terminate'}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -653,6 +746,89 @@ const AdminDashboard = () => {
                   </button>
                 </div>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Credential Modal */}
+      <AnimatePresence>
+        {showCredModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCredModal(false)} 
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" 
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-white w-full max-w-md p-8 rounded-[2.5rem] relative z-10 shadow-2xl border border-slate-100"
+            >
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-blue-50 text-[#003B8E] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Shield size={40} />
+                </div>
+                <h2 className="text-2xl font-normal text-slate-900 tracking-tight">
+                  {selectedCredGroup ? `Group ${selectedCredGroup} Login` : 'Universal Login'}
+                </h2>
+                <p className="text-xs font-normal text-slate-400 mt-2">Set secure credentials for this access level</p>
+              </div>
+
+              <form onSubmit={handleUpdateCredentials} className="space-y-6">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-normal text-slate-400 uppercase tracking-widest ml-1">Email / Username</label>
+                  <input 
+                    required
+                    type="email"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-[#003B8E] focus:bg-white outline-none transition-all text-slate-900 font-normal text-sm"
+                    placeholder="e.g. group1@mlx.com"
+                    value={credFormData.email}
+                    onChange={(e) => setCredFormData({ ...credFormData, email: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-normal text-slate-400 uppercase tracking-widest ml-1">New Password</label>
+                  <div className="relative">
+                    <input 
+                      required
+                      type={showPassword ? "text" : "password"}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-[#003B8E] focus:bg-white outline-none transition-all text-slate-900 font-normal text-sm"
+                      placeholder="Enter secure password"
+                      value={credFormData.password}
+                      onChange={(e) => setCredFormData({ ...credFormData, password: e.target.value })}
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#003B8E] transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <button 
+                    type="button"
+                    onClick={() => setShowCredModal(false)}
+                    className="flex-1 py-4 rounded-2xl font-normal text-[10px] uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    disabled={isSavingCred}
+                    type="submit"
+                    className="flex-1 bg-[#003B8E] text-white py-4 rounded-2xl font-normal text-[10px] uppercase tracking-widest shadow-2xl shadow-blue-500/40 hover:bg-black hover:scale-[1.02] transition-all disabled:opacity-30 active:scale-95"
+                  >
+                    {isSavingCred ? 'Saving...' : 'Update Login'}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}

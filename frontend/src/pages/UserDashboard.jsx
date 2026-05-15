@@ -22,12 +22,18 @@ function UserDashboard() {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedNote, setSelectedNote] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const navigate = useNavigate();
-
   const [globalRegNo, setGlobalRegNo] = useState('');
   const [groupStatuses, setGroupStatuses] = useState([]);
+  const [userGroupId, setUserGroupId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    const gid = localStorage.getItem('userGroupId');
+    if (gid && gid !== 'null') {
+      const numericGid = parseInt(gid);
+      setUserGroupId(numericGid);
+      // Removed: setSelectedGroup(numericGid); -> Show grid instead
+    }
     fetchBeneficiaries();
     fetchConfig();
     fetchGroupStatuses();
@@ -77,6 +83,7 @@ function UserDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('userToken');
     localStorage.removeItem('userRole');
+    localStorage.removeItem('userGroupId');
     navigate('/user/login');
   };
 
@@ -146,16 +153,26 @@ function UserDashboard() {
                   return !status || !status.isHidden;
                 })
                 .map((group) => {
-                  const status = groupStatuses.find(s => s.groupId === group.id) || { isTerminated: false, reason: '' };
+                  const status = groupStatuses.find(s => s.groupId === group.id) || { isTerminated: false, reason: '', userCount: group.users.length };
+                  const displayCount = status.userCount !== undefined ? status.userCount : group.users.length;
                 return (
                   <motion.div 
                     key={group.id}
-                    whileHover={!status.isTerminated ? { y: -6, shadow: "0 25px 50px -12px rgb(0 0 0 / 0.15)" } : {}}
-                    onClick={() => !status.isTerminated && setSelectedGroup(group.id)}
+                    whileHover={(!status.isTerminated && (!userGroupId || group.id === userGroupId)) ? { y: -6, shadow: "0 25px 50px -12px rgb(0 0 0 / 0.15)" } : {}}
+                    onClick={() => {
+                      if (status.isTerminated) return;
+                      if (userGroupId && group.id !== userGroupId) {
+                        alert("You don't have access to see this group's data.");
+                        return;
+                      }
+                      setSelectedGroup(group.id);
+                    }}
                     className={`p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border-2 transition-all group flex flex-col justify-between min-h-[240px] sm:min-h-[280px] relative overflow-hidden ${
                       status.isTerminated 
                       ? 'bg-red-50/50 border-[#C8232C] cursor-not-allowed opacity-90' 
-                      : 'bg-white border-slate-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-[#003B8E] cursor-pointer'
+                      : (userGroupId && group.id !== userGroupId)
+                        ? 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
+                        : 'bg-white border-slate-300 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-[#003B8E] cursor-pointer'
                     }`}
                   >
                     {/* Decorative background element */}
@@ -167,10 +184,10 @@ function UserDashboard() {
                       <div className="flex justify-between items-start mb-8">
                         <div className="flex flex-col">
                           <span className={`text-[10px] font-medium uppercase tracking-[0.3em] mb-2 ${status.isTerminated ? 'text-[#C8232C]' : 'text-slate-400'}`}>
-                            {status.isTerminated ? 'Status: Terminated' : 'Active Group'}
+                            {status.isTerminated ? 'Status: Terminated' : (userGroupId && group.id !== userGroupId) ? 'Access Restricted' : 'Active Group'}
                           </span>
                           <h3 className={`text-3xl font-normal tracking-tight transition-colors ${
-                            status.isTerminated ? 'text-[#C8232C]' : 'text-[#003B8E] group-hover:text-black'
+                            status.isTerminated ? 'text-[#C8232C]' : (userGroupId && group.id !== userGroupId) ? 'text-slate-400' : 'text-[#003B8E] group-hover:text-black'
                           }`}>
                             Group {group.id < 10 ? `0${group.id}` : group.id}
                           </h3>
@@ -182,7 +199,7 @@ function UserDashboard() {
                             ? 'bg-red-600 text-white border-red-600' 
                             : 'bg-emerald-600 text-white border-emerald-600'
                         }`}>
-                          {status.isTerminated ? 'Suspended' : group.users.length >= 10 ? 'Full Capacity' : 'Active'}
+                          {status.isTerminated ? 'Suspended' : displayCount >= 10 ? 'Full Capacity' : 'Active'}
                         </div>
                       </div>
                     </div>
@@ -200,8 +217,8 @@ function UserDashboard() {
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-slate-600 uppercase tracking-widest">Enrolled Applicants</span>
                             <div className="flex items-baseline gap-1">
-                              <span className={`text-2xl font-normal ${group.users.length >= 10 ? 'text-[#C8232C]' : 'text-[#003B8E]'}`}>
-                                {group.users.length}
+                              <span className={`text-2xl font-normal ${displayCount >= 10 ? 'text-[#C8232C]' : 'text-[#003B8E]'}`}>
+                                {displayCount}
                               </span>
                               <span className="text-slate-500 text-sm font-normal">/ 10</span>
                             </div>
@@ -210,9 +227,9 @@ function UserDashboard() {
                           <div className="relative h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">
                             <motion.div 
                               initial={{ width: 0 }}
-                              animate={{ width: `${(group.users.length / 10) * 100}%` }}
+                              animate={{ width: `${(displayCount / 10) * 100}%` }}
                               transition={{ duration: 1, ease: "easeOut" }}
-                              className={`h-full absolute left-0 top-0 transition-colors ${group.users.length >= 10 ? 'bg-[#C8232C]' : 'bg-[#003B8E]'}`}
+                              className={`h-full absolute left-0 top-0 transition-colors ${displayCount >= 10 ? 'bg-[#C8232C]' : 'bg-[#003B8E]'}`}
                             />
                           </div>
 
