@@ -23,17 +23,32 @@ mongoose.connect(process.env.MONGODB_URI)
         try {
             const collections = await mongoose.connection.db.listCollections({ name: 'beneficiaries' }).toArray();
             if (collections.length > 0) {
+                // Remove stale unique index
                 const indexes = await mongoose.connection.collection('beneficiaries').indexes();
                 const hasEmailIndex = indexes.some(idx => idx.name === 'email_1');
                 
                 if (hasEmailIndex) {
                     console.log('Detected stale unique index "email_1". Dropping for compatibility...');
                     await mongoose.connection.collection('beneficiaries').dropIndex('email_1');
-                    console.log('Migration successful: Stale index removed.');
                 }
+
+                // Migrate isActive to status
+                await mongoose.connection.collection('beneficiaries').updateMany(
+                    { status: { $exists: false } },
+                    [
+                        { 
+                            $set: { 
+                                status: { 
+                                    $cond: { if: { $eq: ["$isActive", true] }, then: "Active", else: "Inactive" } 
+                                } 
+                            } 
+                        }
+                    ]
+                );
+                console.log('Migration successful: Schema updated to status field.');
             }
         } catch (err) {
-            console.log('Migration info: No stale index found or already removed.');
+            console.log('Migration info:', err.message);
         }
         // ----------------------------------------
     })
@@ -44,7 +59,7 @@ const BeneficiarySchema = new mongoose.Schema({
     name: { type: String, required: true },
     address: { type: String, required: true }, // State
     gender: { type: String, required: true },
-    isActive: { type: Boolean, default: true },
+    status: { type: String, default: 'Active', enum: ['Active', 'Inactive', 'On Hold'] },
     comment: { type: String, default: '' },
     groupId: { type: Number, required: true, min: 1, max: 9 },
     createdAt: { type: Date, default: Date.now }

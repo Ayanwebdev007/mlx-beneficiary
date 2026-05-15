@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Shield, Users, Database, LogOut, Trash2, Plus, Edit2, LayoutDashboard, ChevronRight, X, MessageSquare, AlertCircle, Eye, EyeOff, CheckSquare, Square, CheckCircle2 } from 'lucide-react';
+import { Shield, Users, Database, LogOut, Trash2, Plus, Edit2, LayoutDashboard, ChevronRight, X, MessageSquare, AlertCircle, Eye, EyeOff, CheckSquare, Square, CheckCircle2, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../assets/app_logo.png';
@@ -27,7 +27,8 @@ const AdminDashboard = () => {
     name: '',
     address: 'Andhra Pradesh',
     gender: 'Male',
-    isActive: true,
+    isActive: true, // Legacy support if needed, but we'll use status
+    status: 'Active',
     comment: '',
     groupId: 1
   });
@@ -137,7 +138,8 @@ const AdminDashboard = () => {
       name: beneficiary.name,
       address: beneficiary.address,
       gender: beneficiary.gender,
-      isActive: beneficiary.isActive,
+      isActive: beneficiary.status === 'Active',
+      status: beneficiary.status || 'Active',
       comment: beneficiary.comment,
       groupId: beneficiary.groupId
     });
@@ -161,7 +163,7 @@ const AdminDashboard = () => {
       }
       setShowAddModal(false);
       setEditId(null);
-      setFormData({ name: '', address: 'Andhra Pradesh', gender: 'Male', isActive: true, comment: '', groupId: 1 });
+      setFormData({ name: '', address: 'Andhra Pradesh', gender: 'Male', status: 'Active', comment: '', groupId: 1 });
       fetchData();
     } catch (err) {
       alert(err.response?.data?.message || 'Error processing request');
@@ -240,7 +242,7 @@ const AdminDashboard = () => {
           </div>
           {currentView === 'Users' && (
             <button 
-              onClick={() => { setEditId(null); setFormData({ name: '', address: 'Andhra Pradesh', gender: 'Male', isActive: true, comment: '', groupId: 1 }); setShowAddModal(true); }}
+              onClick={() => { setEditId(null); setFormData({ name: '', address: 'Andhra Pradesh', gender: 'Male', status: 'Active', comment: '', groupId: 1 }); setShowAddModal(true); }}
               className="bg-[#003B8E] hover:bg-[#002B6E] text-white px-6 py-3.5 rounded-2xl font-normal text-xs uppercase tracking-widest flex items-center gap-2 shadow-2xl shadow-blue-500/30 transition-all hover:scale-[1.02] active:scale-95"
             >
               <Plus size={18} />
@@ -479,21 +481,16 @@ const AdminDashboard = () => {
                             <span className="bg-[#003B8E]/5 text-[#003B8E] px-4 py-1.5 rounded-xl text-[10px] font-normal uppercase tracking-widest border border-blue-100">Group {b.groupId}</span>
                           </td>
                           <td className="px-8 py-6">
-                            <motion.div 
-                              animate={b.isActive ? { 
-                                scale: [1, 1.05, 1],
-                                opacity: [1, 0.8, 1]
-                              } : {}}
-                              transition={b.isActive ? { 
-                                duration: 1.5, 
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                              } : {}}
-                              className={`px-3 py-1.5 rounded-xl text-[10px] font-normal uppercase tracking-widest inline-flex items-center gap-2 border ${b.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-[#C8232C] border-red-100'}`}
-                            >
-                              {b.isActive ? <CheckSquare size={13} strokeWidth={2.5} /> : <Square size={13} strokeWidth={2.5} />}
-                              {b.isActive ? 'Active' : 'Archived'}
-                            </motion.div>
+                            <div className={`px-3 py-1.5 rounded-xl text-[10px] font-normal uppercase tracking-widest inline-flex items-center gap-2 border ${
+                              b.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 
+                              b.status === 'On Hold' ? 'bg-amber-50 text-amber-700 border-amber-100' : 
+                              'bg-red-50 text-[#C8232C] border-red-100'
+                            }`}>
+                              {b.status === 'Active' ? <CheckSquare size={13} strokeWidth={2.5} /> : 
+                               b.status === 'On Hold' ? <Clock size={13} strokeWidth={2.5} /> : 
+                               <Square size={13} strokeWidth={2.5} />}
+                              {b.status || 'Active'}
+                            </div>
                           </td>
                           <td className="px-8 py-6 text-right flex justify-end gap-3">
                             <button onClick={() => handleEdit(b)} className="p-3 text-slate-400 hover:text-[#003B8E] hover:bg-blue-50 rounded-xl transition-all" title="Modify Record">
@@ -571,9 +568,17 @@ const AdminDashboard = () => {
                   </select>
                 </div>
 
-                <div className="flex items-center gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100 h-fit self-end">
-                  <input type="checkbox" id="isActive" className="w-4 h-4 rounded border-slate-300 text-[#003B8E] focus:ring-[#003B8E]" checked={formData.isActive} onChange={(e) => setFormData({...formData, isActive: e.target.checked})} />
-                  <label htmlFor="isActive" className="text-[10px] font-black text-slate-700 uppercase tracking-widest cursor-pointer">Active Profile</label>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Profile Status</label>
+                  <select className={`w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 outline-none font-black appearance-none cursor-pointer focus:bg-white text-sm ${
+                    formData.status === 'Active' ? 'text-emerald-600 border-emerald-100' : 
+                    formData.status === 'On Hold' ? 'text-amber-600 border-amber-100' : 
+                    'text-red-600 border-red-100'
+                  }`} value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})}>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="On Hold">On Hold</option>
+                  </select>
                 </div>
 
                 <div className="space-y-1.5 col-span-2">

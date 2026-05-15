@@ -299,7 +299,7 @@ function UserDashboard() {
                       <span className="inline sm:hidden">G</span>
                     </th>
                     <th className="px-4 sm:px-8 py-4 sm:py-5 text-[#003B8E] font-normal text-[9px] sm:text-[11px] uppercase tracking-[0.2em] text-center">Status</th>
-                    <th className="px-4 sm:px-8 py-4 sm:py-5 text-[#003B8E] font-normal text-[9px] sm:text-[11px] uppercase tracking-[0.2em] text-center">
+                    <th className="px-4 sm:px-8 py-4 sm:py-5 text-[#003B8E] font-normal text-[9px] sm:text-[11px] uppercase tracking-[0.2em] text-left">
                       <span className="hidden sm:inline">Remarks</span>
                       <span className="inline sm:hidden">Note</span>
                     </th>
@@ -338,33 +338,41 @@ function UserDashboard() {
                         </td>
                         <td className="px-4 sm:px-8 py-4 sm:py-6 text-center">
                           <motion.div 
-                            animate={b.isActive ? { 
+                            animate={b.status === 'Active' ? { 
                               scale: [1, 1.1, 1],
                               opacity: [1, 0.8, 1]
                             } : {}}
-                            transition={b.isActive ? { 
+                            transition={b.status === 'Active' ? { 
                               duration: 1.5, 
                               repeat: Infinity,
                               ease: "easeInOut"
                             } : {}}
-                            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg w-fit mx-auto ${b.isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-[#C8232C] border border-red-100'}`}
+                            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg w-fit mx-auto border ${b.status === "Active" ? "bg-emerald-50 text-emerald-700 border-emerald-100" : b.status === "On Hold" ? "bg-amber-50 text-amber-700 border-amber-100" : "bg-red-50 text-[#C8232C] border-red-100"}`}
                           >
-                            {b.isActive ? <CheckSquare size={12} strokeWidth={2.5} className="sm:w-[14px] sm:h-[14px]" /> : <Square size={12} strokeWidth={2.5} className="sm:w-[14px] sm:h-[14px]" />}
-                            <span className="text-[8px] sm:text-[10px] font-normal uppercase tracking-widest">{b.isActive ? 'Active' : 'Inactive'}</span>
+                            {b.status === 'Active' ? <CheckSquare size={12} strokeWidth={2.5} className="sm:w-[14px] sm:h-[14px]" /> : 
+                             b.status === 'On Hold' ? <Clock size={12} strokeWidth={2.5} className="sm:w-[14px] sm:h-[14px]" /> :
+                             <Square size={12} strokeWidth={2.5} className="sm:w-[14px] sm:h-[14px]" />}
+                            <span className="text-[8px] sm:text-[10px] font-normal uppercase tracking-widest">{b.status || (b.isActive ? 'Active' : 'Inactive')}</span>
                           </motion.div>
                         </td>
-                        <td className="px-4 sm:px-8 py-4 sm:py-6 text-center">
-                          {b.comment ? (
-                            <button 
-                              onClick={() => setSelectedNote({ name: b.name, note: b.comment })}
-                              className="text-[#003B8E] hover:text-[#C8232C] transition-colors p-2.5 bg-slate-50 hover:bg-red-50 rounded-xl inline-flex"
-                              title="View Note"
-                            >
-                              <MessageSquare size={18} />
-                            </button>
-                          ) : (
-                            <span className="text-slate-300 font-light text-[10px] italic uppercase tracking-wider">No Notes</span>
-                          )}
+                        <td className="px-4 sm:px-8 py-4 sm:py-6">
+                          <div className="flex flex-col items-start gap-1">
+                            {b.comment ? (
+                              <>
+                                <p className="text-xs text-slate-600 font-normal line-clamp-1 text-left">
+                                  {b.comment}
+                                </p>
+                                <button 
+                                  onClick={() => setSelectedNote({ name: b.name, note: b.comment })}
+                                  className="text-[10px] font-semibold text-[#003B8E] hover:text-[#C8232C] transition-colors uppercase tracking-widest mt-1"
+                                >
+                                  Know More
+                                </button>
+                              </>
+                            ) : (
+                              <span className="text-slate-300 font-light text-[10px] italic uppercase tracking-wider">No Remarks</span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -421,6 +429,23 @@ function UserDashboard() {
           </div>
         )}
       </AnimatePresence>
+      {/* Footer Disclaimer */}
+      <footer className="max-w-[1400px] mx-auto px-6 md:px-10 py-12 border-t border-slate-200 mt-10">
+        <div className="flex flex-col gap-6">
+          <p className="text-[11px] sm:text-xs text-slate-500 font-normal leading-relaxed text-justify sm:text-left">
+            The User accepts full responsibility for providing the correct legal names, contact information, and distribution percentages for all listed beneficiaries. MLX Direct shall not be held liable for erroneous transactions or delays arising from incomplete or inaccurate data. This coordination record remains effective until a written revocation or update is filed through the official MLX Direct Beneficiary Coordination process.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-slate-100">
+            <span className="text-[10px] font-semibold text-[#003B8E] uppercase tracking-[0.2em]">
+              © 2026 MLX DIRECT. All rights reserved.
+            </span>
+            <div className="flex items-center gap-4">
+              <div className="h-1 w-1 bg-slate-300 rounded-full" />
+              <span className="text-[9px] font-normal text-slate-400 uppercase tracking-widest">Secure Coordination Portal</span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
