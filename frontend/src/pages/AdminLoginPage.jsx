@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Mail, Lock } from 'lucide-react';
+import { ShieldCheck, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import logo from '../assets/app_logo.png';
 
 const AdminLoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -82,13 +83,20 @@ const AdminLoginPage = () => {
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16} />
               <input
-                type="password"
-                className="w-full py-3.5 pl-12 pr-4 rounded-xl outline-none transition-all text-white font-normal input-elegant"
+                type={showPassword ? 'text' : 'password'}
+                className="w-full py-3.5 pl-12 pr-12 rounded-xl outline-none transition-all text-white font-normal input-elegant"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <button
+                type="button"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors focus:outline-none cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 

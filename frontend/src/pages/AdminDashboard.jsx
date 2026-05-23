@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Shield, Users, Database, LogOut, Trash2, Plus, Edit2, LayoutDashboard, ChevronRight, X, MessageSquare, AlertCircle, Eye, EyeOff, CheckSquare, Square, CheckCircle2, Clock } from 'lucide-react';
+import { Shield, Users, Database, LogOut, Trash2, Plus, Edit2, LayoutDashboard, ChevronRight, X, MessageSquare, AlertCircle, Eye, EyeOff, CheckSquare, Square, CheckCircle2, Clock, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../assets/app_logo.png';
@@ -30,8 +30,10 @@ const AdminDashboard = () => {
     isActive: true, // Legacy support if needed, but we'll use status
     status: 'Active',
     comment: '',
+    images: [],
     groupId: 1
   });
+  const [isUploading, setIsUploading] = useState(false);
 
   const [globalRegNo, setGlobalRegNo] = useState('');
   const [groupStatuses, setGroupStatuses] = useState([]);
@@ -184,9 +186,47 @@ const AdminDashboard = () => {
       isActive: beneficiary.status === 'Active',
       status: beneficiary.status || 'Active',
       comment: beneficiary.comment,
+      images: beneficiary.images || [],
       groupId: beneficiary.groupId
     });
     setShowAddModal(true);
+  };
+
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    setIsUploading(true);
+    const token = localStorage.getItem('adminToken');
+    
+    for (const file of files) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      await new Promise((resolve) => {
+        reader.onload = async () => {
+          try {
+            const res = await axios.post('/api/upload', { image: reader.result }, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            setFormData(prev => ({
+              ...prev,
+              images: [...(prev.images || []), res.data.url]
+            }));
+          } catch (err) {
+            alert('Failed to upload image: ' + (err.response?.data?.message || err.message));
+          }
+          resolve();
+        };
+      });
+    }
+    setIsUploading(false);
+  };
+
+  const handleRemoveImage = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      images: (prev.images || []).filter((_, idx) => idx !== indexToRemove)
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -206,7 +246,7 @@ const AdminDashboard = () => {
       }
       setShowAddModal(false);
       setEditId(null);
-      setFormData({ name: '', address: 'Andhra Pradesh', gender: 'Male', status: 'Active', comment: '', groupId: 1 });
+      setFormData({ name: '', address: 'Andhra Pradesh', gender: 'Male', status: 'Active', comment: '', images: [], groupId: 1 });
       fetchData();
     } catch (err) {
       alert(err.response?.data?.message || 'Error processing request');
@@ -285,7 +325,7 @@ const AdminDashboard = () => {
           </div>
           {currentView === 'Users' && (
             <button 
-              onClick={() => { setEditId(null); setFormData({ name: '', address: 'Andhra Pradesh', gender: 'Male', status: 'Active', comment: '', groupId: 1 }); setShowAddModal(true); }}
+              onClick={() => { setEditId(null); setFormData({ name: '', address: 'Andhra Pradesh', gender: 'Male', status: 'Active', comment: '', images: [], groupId: 1 }); setShowAddModal(true); }}
               className="bg-[#003B8E] hover:bg-[#002B6E] text-white px-6 py-3.5 rounded-2xl font-normal text-xs uppercase tracking-widest flex items-center gap-2 shadow-2xl shadow-blue-500/30 transition-all hover:scale-[1.02] active:scale-95"
             >
               <Plus size={18} />
@@ -679,9 +719,60 @@ const AdminDashboard = () => {
                   <textarea className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 focus:border-[#003B8E] focus:bg-white outline-none transition-all text-slate-900 font-bold h-24 resize-none text-sm" placeholder="Internal notes..." value={formData.comment} onChange={(e) => setFormData({...formData, comment: e.target.value})} />
                 </div>
 
+                <div className="space-y-1.5 col-span-2">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Remarks Images</label>
+                  
+                  {formData.images && formData.images.length > 0 && (
+                    <div className="grid grid-cols-4 gap-3 mb-3">
+                      {formData.images.map((url, idx) => (
+                        <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                          <img src={url} alt="remark upload" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(idx)}
+                            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition-colors shadow-md cursor-pointer"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-3">
+                    <label className={`flex-1 flex flex-col items-center justify-center p-4 rounded-xl border border-dashed transition-all cursor-pointer ${
+                      isUploading ? 'bg-slate-50 border-slate-200 cursor-not-allowed' : 'bg-slate-50 hover:bg-slate-100 border-slate-200 hover:border-[#003B8E]'
+                    }`}>
+                      <div className="flex items-center gap-2 text-slate-400">
+                        {isUploading ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-slate-300 border-t-[#003B8E] rounded-full animate-spin" />
+                            <span className="text-xs font-bold">Uploading files...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload size={16} className="text-[#003B8E]" />
+                            <span className="text-xs font-bold text-slate-600">Click to attach images</span>
+                          </>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                        disabled={isUploading}
+                      />
+                    </label>
+                  </div>
+                </div>
+
                 <div className="flex gap-4 col-span-2 mt-2">
                   <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-3.5 rounded-2xl font-normal text-[10px] uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all border border-transparent hover:border-slate-200">Abort</button>
-                  <button type="submit" className="flex-1 bg-[#003B8E] text-white py-3.5 rounded-2xl font-normal text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-blue-500/30 hover:bg-[#002B6E] hover:scale-[1.02] transition-all transform active:scale-95">Commit</button>
+                  <button type="submit" disabled={isUploading} className="flex-1 bg-[#003B8E] text-white py-3.5 rounded-2xl font-normal text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-blue-500/30 hover:bg-[#002B6E] hover:scale-[1.02] transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                    {isUploading ? 'Uploading...' : 'Commit'}
+                  </button>
                 </div>
               </form>
             </motion.div>

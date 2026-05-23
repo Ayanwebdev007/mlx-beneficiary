@@ -7,12 +7,21 @@ const jwt = require('jsonwebtoken');
 
 dotenv.config();
 
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // MongoDB Connection & Migration
 mongoose.connect(process.env.MONGODB_URI)
@@ -61,6 +70,7 @@ const BeneficiarySchema = new mongoose.Schema({
     gender: { type: String, required: true },
     status: { type: String, default: 'Active', enum: ['Active', 'Inactive', 'On Hold'] },
     comment: { type: String, default: '' },
+    images: [{ type: String }], // Cloudinary image URLs
     groupId: { type: Number, required: true, min: 1, max: 9 },
     createdAt: { type: Date, default: Date.now }
 });
@@ -233,6 +243,23 @@ app.get('/api/admin/stats', auth('admin'), async (req, res) => {
         res.json({ totalUsers, totalBeneficiaries });
     } catch (err) {
         res.status(500).json({ message: err.message });
+    }
+});
+
+// Image Upload Route (Admin Only)
+app.post('/api/upload', auth('admin'), async (req, res) => {
+    const { image } = req.body;
+    if (!image) {
+        return res.status(400).json({ message: 'No image data provided' });
+    }
+    try {
+        const uploadResponse = await cloudinary.uploader.upload(image, {
+            folder: 'mlx_beneficiaries'
+        });
+        res.json({ url: uploadResponse.secure_url });
+    } catch (err) {
+        console.error('Cloudinary upload error:', err);
+        res.status(500).json({ message: err.message || 'Image upload failed' });
     }
 });
 

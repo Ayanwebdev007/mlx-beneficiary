@@ -12,6 +12,7 @@ function UserDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedNote, setSelectedNote] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [globalRegNo, setGlobalRegNo] = useState('');
   const [groupStatuses, setGroupStatuses] = useState([]);
@@ -382,15 +383,25 @@ function UserDashboard() {
                         <td className="px-6 sm:px-10 py-5 sm:py-6">
                           <div className="flex flex-col items-start gap-1.5">
                             {b.comment ? (
-                              <>
-                                <p className="text-sm text-white/40 font-normal line-clamp-1 max-w-[200px]">{b.comment}</p>
-                                <button
-                                  onClick={() => setSelectedNote({ name: b.name, note: b.comment })}
-                                  className="text-[10px] sm:text-xs font-normal uppercase tracking-widest transition-colors cursor-pointer text-[#5b9be6] hover:text-[#C8232C]"
-                                >
-                                  Know More
-                                </button>
-                              </>
+                              <div className="flex items-center gap-3">
+                                {b.images && b.images.length > 0 && (
+                                  <img
+                                    src={b.images[0]}
+                                    alt="remark thumbnail"
+                                    className="w-10 h-10 rounded-lg object-cover border border-white/10 shrink-0 cursor-pointer hover:border-[#5b9be6]/50 transition-colors shadow-md"
+                                    onClick={() => setSelectedNote({ name: b.name, note: b.comment, images: b.images || [] })}
+                                  />
+                                )}
+                                <div className="flex flex-col items-start gap-1">
+                                  <p className="text-sm text-white/40 font-normal line-clamp-1 max-w-[200px]">{b.comment}</p>
+                                  <button
+                                    onClick={() => setSelectedNote({ name: b.name, note: b.comment, images: b.images || [] })}
+                                    className="text-[10px] sm:text-xs font-normal uppercase tracking-widest transition-colors cursor-pointer text-[#5b9be6] hover:text-[#C8232C]"
+                                  >
+                                    Know More
+                                  </button>
+                                </div>
+                              </div>
                             ) : (
                               <span className="text-white/20 font-light text-[11px] sm:text-xs italic uppercase tracking-wider">No Remarks</span>
                             )}
@@ -439,9 +450,31 @@ function UserDashboard() {
                 <h2 className="text-2xl sm:text-3xl font-normal text-white leading-tight">{selectedNote.name}</h2>
               </div>
 
-              <div className="p-6 sm:p-8 rounded-3xl italic text-white/50 leading-relaxed font-normal text-sm sm:text-base"
-                style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)' }}>
-                "{selectedNote.note}"
+              <div className="max-h-[50vh] overflow-y-auto pr-2 space-y-6 scrollbar-elegant">
+                <div className="p-6 sm:p-8 rounded-3xl italic text-white/50 leading-relaxed font-normal text-sm sm:text-base"
+                  style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)' }}>
+                  "{selectedNote.note}"
+                </div>
+
+                {selectedNote.images && selectedNote.images.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-normal uppercase tracking-widest text-white/30 ml-1">Attached Images (Click to Zoom)</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {selectedNote.images.map((url, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedImage(url)}
+                          className="relative group aspect-[4/3] rounded-2xl overflow-hidden border border-white/[0.05] bg-white/[0.01] hover:border-[#5b9be6]/50 transition-all cursor-pointer"
+                        >
+                          <img src={url} alt="attached remark" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="text-[10px] font-normal uppercase tracking-widest text-white bg-[#05070d]/60 px-3 py-1.5 rounded-lg border border-white/10">View Full</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button
@@ -453,6 +486,41 @@ function UserDashboard() {
               >
                 Done Reading
               </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Image Lightbox Modal */}
+      <AnimatePresence>
+        {selectedImage && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedImage(null)}
+              className="absolute inset-0"
+              style={{ background: 'rgba(5,7,13,0.9)', backdropFilter: 'blur(15px)' }}
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative max-w-4xl max-h-[85vh] z-10 flex flex-col items-center justify-center"
+            >
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="absolute -top-12 right-0 p-2.5 rounded-full text-white/50 hover:text-white transition-all cursor-pointer bg-white/5 border border-white/10 hover:bg-white/10 shadow-lg"
+              >
+                <X size={20} />
+              </button>
+              <img
+                src={selectedImage}
+                alt="remark zoom"
+                className="max-w-full max-h-[80vh] object-contain rounded-2xl border border-white/10 shadow-2xl"
+              />
             </motion.div>
           </div>
         )}
